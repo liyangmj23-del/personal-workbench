@@ -49,7 +49,6 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Pantone 2026「Powdered Pastels」装饰色板 —— 只用于点状强调（徽章/图标底色），不做正文文字色 */
   --color-pastel-lemon: var(--pastel-lemon);
   --color-pastel-nimbus: var(--pastel-nimbus);
   --color-pastel-rose: var(--pastel-rose);
@@ -59,13 +58,11 @@
   --color-pastel-aqua: var(--pastel-aqua);
   --color-pastel-orchid: var(--pastel-orchid);
 
-  /* 状态色：涨/跌、收入/支出——固定语义，不跟主题走 */
   --color-status-good: var(--status-good);
   --color-status-bad: var(--status-bad);
 }
 
 :root {
-  /* Pantone 2026 Powdered Pastels 原始色板 */
   --pastel-lemon: #f2e7b0;
   --pastel-nimbus: #c7cbcf;
   --pastel-rose: #eac9cb;
