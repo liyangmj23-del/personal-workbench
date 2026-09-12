@@ -1,0 +1,19 @@
+# 真实数据永远不进这个仓库
+vault-data/
+
+# 环境变量与密钥
+.env
+*.env
+
+# Docker 数据卷（如果挂载在本目录内）
+docker-data/
+pgdata/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS / 编辑器
+.DS_Store
+Thumbs.db
