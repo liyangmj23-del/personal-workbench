@@ -17,18 +17,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Wallet, LineChart } from "lucide-react";
 import { AddAccountDialog } from "@/components/finance/add-account-dialog";
 import { AddTransactionDialog } from "@/components/finance/add-transaction-dialog";
 import { AddHoldingDialog } from "@/components/finance/add-holding-dialog";
 import { UpdateHoldingValueForm } from "@/components/finance/update-holding-value-form";
 import { deleteAccount, deleteTransaction, deleteHolding } from "@/lib/actions/finance";
-
-function formatCNY(n: number) {
-  return n.toLocaleString("zh-CN", { style: "currency", currency: "CNY", maximumFractionDigits: 2 });
-}
+import { getDict } from "@/lib/i18n/get-lang";
+import { formatCNY } from "@/lib/format";
 
 export default async function FinancePage() {
+  const { t, lang } = await getDict();
   const [accounts, transactions, holdings] = await Promise.all([
     db.account.findMany({ include: { transactions: true }, orderBy: { createdAt: "asc" } }),
     db.transaction.findMany({ include: { account: true }, orderBy: { date: "desc" }, take: 50 }),
@@ -42,21 +41,26 @@ export default async function FinancePage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">记账 & 持仓</h1>
-          <p className="text-muted-foreground text-sm">日常流水记账 + 基金/股票持仓看板</p>
+          <h1 className="text-2xl font-semibold">{t.fin_title}</h1>
+          <p className="text-muted-foreground text-sm">{t.fin_subtitle}</p>
         </div>
         <AddAccountDialog />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {accounts.map((acc) => {
-          const balance = acc.transactions.reduce((s, t) => s + t.amount, 0);
+          const balance = acc.transactions.reduce((s, tx) => s + tx.amount, 0);
           return (
             <Card key={acc.id}>
               <CardHeader className="flex flex-row items-start justify-between">
-                <div>
-                  <CardDescription>{acc.type === "CASH" ? "现金账户" : "投资账户"}</CardDescription>
-                  <CardTitle>{acc.name}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className={`flex size-9 items-center justify-center rounded-full ${acc.type === "CASH" ? "bg-pastel-lemon" : "bg-pastel-ice"} text-foreground`}>
+                    {acc.type === "CASH" ? <Wallet className="size-4" /> : <LineChart className="size-4" />}
+                  </div>
+                  <div>
+                    <CardDescription>{acc.type === "CASH" ? t.fin_cash_account : t.fin_invest_account}</CardDescription>
+                    <CardTitle>{acc.name}</CardTitle>
+                  </div>
                 </div>
                 <form action={deleteAccount.bind(null, acc.id)}>
                   <Button variant="ghost" size="icon" type="submit" className="size-7">
@@ -65,20 +69,20 @@ export default async function FinancePage() {
                 </form>
               </CardHeader>
               {acc.type === "CASH" && (
-                <CardContent className="text-xl font-semibold">{formatCNY(balance)}</CardContent>
+                <CardContent className="text-xl font-semibold">{formatCNY(balance, lang)}</CardContent>
               )}
             </Card>
           );
         })}
         {accounts.length === 0 && (
-          <p className="text-sm text-muted-foreground">还没有账户，先建一个吧。</p>
+          <p className="text-sm text-muted-foreground">{t.fin_no_accounts}</p>
         )}
       </div>
 
       <Tabs defaultValue="transactions">
         <TabsList>
-          <TabsTrigger value="transactions">流水</TabsTrigger>
-          <TabsTrigger value="holdings">持仓</TabsTrigger>
+          <TabsTrigger value="transactions">{t.fin_tab_transactions}</TabsTrigger>
+          <TabsTrigger value="holdings">{t.fin_tab_holdings}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions" className="flex flex-col gap-4">
@@ -90,27 +94,27 @@ export default async function FinancePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>日期</TableHead>
-                    <TableHead>账户</TableHead>
-                    <TableHead>分类</TableHead>
-                    <TableHead>备注</TableHead>
-                    <TableHead className="text-right">金额</TableHead>
+                    <TableHead>{t.fin_col_date}</TableHead>
+                    <TableHead>{t.fin_col_account}</TableHead>
+                    <TableHead>{t.fin_col_category}</TableHead>
+                    <TableHead>{t.fin_col_note}</TableHead>
+                    <TableHead className="text-right">{t.fin_col_amount}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell>{t.date.toISOString().slice(0, 10)}</TableCell>
-                      <TableCell>{t.account.name}</TableCell>
-                      <TableCell>{t.category}</TableCell>
-                      <TableCell className="text-muted-foreground">{t.note}</TableCell>
-                      <TableCell className={`text-right ${t.amount >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                        {t.amount >= 0 ? "+" : ""}
-                        {formatCNY(t.amount)}
+                  {transactions.map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>{tx.date.toISOString().slice(0, 10)}</TableCell>
+                      <TableCell>{tx.account.name}</TableCell>
+                      <TableCell>{tx.category}</TableCell>
+                      <TableCell className="text-muted-foreground">{tx.note}</TableCell>
+                      <TableCell className={`text-right ${tx.amount >= 0 ? "text-status-good" : "text-status-bad"}`}>
+                        {tx.amount >= 0 ? "+" : ""}
+                        {formatCNY(tx.amount, lang)}
                       </TableCell>
                       <TableCell>
-                        <form action={deleteTransaction.bind(null, t.id)}>
+                        <form action={deleteTransaction.bind(null, tx.id)}>
                           <Button variant="ghost" size="icon" type="submit" className="size-7">
                             <Trash2 className="size-4" />
                           </Button>
@@ -121,7 +125,7 @@ export default async function FinancePage() {
                   {transactions.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        还没有流水记录
+                        {t.fin_no_transactions}
                       </TableCell>
                     </TableRow>
                   )}
@@ -140,12 +144,12 @@ export default async function FinancePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>名称</TableHead>
-                    <TableHead>账户</TableHead>
-                    <TableHead className="text-right">份额</TableHead>
-                    <TableHead className="text-right">成本</TableHead>
-                    <TableHead className="text-right">市值</TableHead>
-                    <TableHead className="text-right">盈亏</TableHead>
+                    <TableHead>{t.fin_col_name}</TableHead>
+                    <TableHead>{t.fin_col_account}</TableHead>
+                    <TableHead className="text-right">{t.fin_col_shares}</TableHead>
+                    <TableHead className="text-right">{t.fin_col_cost}</TableHead>
+                    <TableHead className="text-right">{t.fin_col_value}</TableHead>
+                    <TableHead className="text-right">{t.fin_col_pnl}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -161,12 +165,12 @@ export default async function FinancePage() {
                         </TableCell>
                         <TableCell>{h.account.name}</TableCell>
                         <TableCell className="text-right">{h.shares}</TableCell>
-                        <TableCell className="text-right">{formatCNY(h.costBasis)}</TableCell>
+                        <TableCell className="text-right">{formatCNY(h.costBasis, lang)}</TableCell>
                         <TableCell className="text-right">
                           <UpdateHoldingValueForm holdingId={h.id} currentValue={h.currentValue} />
                         </TableCell>
                         <TableCell className="text-right">
-                          <Badge variant={pnl >= 0 ? "default" : "destructive"}>
+                          <Badge className={pnl >= 0 ? "bg-pastel-aqua text-status-good" : "bg-pastel-rose text-status-bad"}>
                             {pnl >= 0 ? "+" : ""}
                             {pnlPct.toFixed(1)}%
                           </Badge>
@@ -184,7 +188,7 @@ export default async function FinancePage() {
                   {holdings.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center text-muted-foreground">
-                        还没有持仓记录
+                        {t.fin_no_holdings}
                       </TableCell>
                     </TableRow>
                   )}

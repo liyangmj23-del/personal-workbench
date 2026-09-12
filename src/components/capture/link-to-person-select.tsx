@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { linkCapturedSourceToPerson } from "@/lib/actions/capture";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/language-provider";
 
 export function LinkToPersonSelect({
   sourceId,
@@ -20,6 +21,7 @@ export function LinkToPersonSelect({
   personId: string | null;
   persons: { id: string; name: string }[];
 }) {
+  const { t } = useLanguage();
   const [value, setValue] = useState(personId ?? "");
   const [, startTransition] = useTransition();
 
@@ -32,12 +34,12 @@ export function LinkToPersonSelect({
         if (!next) return;
         startTransition(async () => {
           await linkCapturedSourceToPerson(sourceId, next);
-          toast.success("已关联到人物卡");
+          toast.success(t.cap_linked);
         });
       }}
     >
       <SelectTrigger className="h-8 w-40 text-xs">
-        <SelectValue placeholder="关联到人物..." />
+        <SelectValue placeholder={t.cap_link_placeholder} />
       </SelectTrigger>
       <SelectContent>
         {persons.map((p) => (

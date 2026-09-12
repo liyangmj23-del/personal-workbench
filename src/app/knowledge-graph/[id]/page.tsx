@@ -3,12 +3,14 @@ import { db } from "@/lib/db";
 import { PersonForm } from "@/components/knowledge-graph/person-form";
 import { RelationManager } from "@/components/knowledge-graph/relation-manager";
 import { Separator } from "@/components/ui/separator";
+import { getDict } from "@/lib/i18n/get-lang";
 
 export default async function PersonDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { t } = await getDict();
   const { id } = await params;
   const [person, relationsFrom, relationsTo, allPersons] = await Promise.all([
     db.person.findUnique({ where: { id } }),
@@ -28,7 +30,7 @@ export default async function PersonDetailPage({
       <PersonForm person={person} />
       <Separator />
       <div>
-        <h2 className="mb-3 text-lg font-semibold">关联人物</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t.kg_related_title}</h2>
         <RelationManager personId={id} relations={relations} otherPersons={allPersons} />
       </div>
     </div>

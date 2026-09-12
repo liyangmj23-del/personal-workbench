@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2, Plus } from "lucide-react";
 import { createRelation, deleteRelation } from "@/lib/actions/knowledge-graph";
+import { useLanguage } from "@/components/language-provider";
 
 type OtherPerson = { id: string; name: string };
 type RelationItem = {
@@ -31,6 +32,7 @@ export function RelationManager({
   relations: RelationItem[];
   otherPersons: OtherPerson[];
 }) {
+  const { t } = useLanguage();
   const [targetId, setTargetId] = useState(otherPersons[0]?.id ?? "");
   const [note, setNote] = useState("");
   const [pending, startTransition] = useTransition();
@@ -57,7 +59,7 @@ export function RelationManager({
           </Button>
         </div>
       ))}
-      {relations.length === 0 && <p className="text-muted-foreground text-sm">还没有关联人物</p>}
+      {relations.length === 0 && <p className="text-muted-foreground text-sm">{t.kg_no_related}</p>}
 
       {otherPersons.length > 0 && (
         <div className="flex items-center gap-2 pt-2">
@@ -76,7 +78,7 @@ export function RelationManager({
           <Input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="关联说明（可选）"
+            placeholder={t.kg_relation_note_placeholder}
             className="max-w-xs"
           />
           <Button
@@ -95,7 +97,7 @@ export function RelationManager({
             }
           >
             <Plus className="size-4" />
-            关联
+            {t.kg_add_relation}
           </Button>
         </div>
       )}

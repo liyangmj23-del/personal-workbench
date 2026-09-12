@@ -5,8 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { PersonGraph } from "@/components/knowledge-graph/person-graph";
+import { getDict } from "@/lib/i18n/get-lang";
 
 export default async function KnowledgeGraphPage() {
+  const { t } = await getDict();
   const [persons, relations] = await Promise.all([
     db.person.findMany({ orderBy: { updatedAt: "desc" } }),
     db.personRelation.findMany(),
@@ -16,16 +18,16 @@ export default async function KnowledgeGraphPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">知识图谱</h1>
-          <p className="text-muted-foreground text-sm">投资大师 + 行业人物的观点/方法论/案例卡片</p>
+          <h1 className="text-2xl font-semibold">{t.kg_title}</h1>
+          <p className="text-muted-foreground text-sm">{t.kg_subtitle}</p>
         </div>
         <Button render={<Link href="/knowledge-graph/new" />} size="sm">
           <Plus className="size-4" />
-          新建人物卡
+          {t.kg_new}
         </Button>
       </div>
 
-      <PersonGraph persons={persons} relations={relations} />
+      <PersonGraph persons={persons} relations={relations} emptyLabel={t.kg_graph_empty} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {persons.map((p) => (
@@ -34,17 +36,19 @@ export default async function KnowledgeGraphPage() {
               <CardContent>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{p.name}</span>
-                  <Badge variant="secondary">{p.category === "INVESTOR" ? "投资" : "行业"}</Badge>
+                  <Badge className={p.category === "INVESTOR" ? "bg-pastel-ice text-foreground" : "bg-pastel-peach text-foreground"}>
+                    {p.category === "INVESTOR" ? t.person_investor : t.person_industry}
+                  </Badge>
                 </div>
                 <div className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                  {p.coreViews || "还没写核心观点"}
+                  {p.coreViews || t.kg_no_views_yet}
                 </div>
               </CardContent>
             </Card>
           </Link>
         ))}
         {persons.length === 0 && (
-          <p className="text-sm text-muted-foreground">还没有人物卡，点右上角新建。</p>
+          <p className="text-sm text-muted-foreground">{t.kg_none_yet}</p>
         )}
       </div>
     </div>

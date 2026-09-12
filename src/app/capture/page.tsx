@@ -7,8 +7,11 @@ import { MarkdownPreview } from "@/components/markdown-preview";
 import { CaptureForm } from "@/components/capture/capture-form";
 import { LinkToPersonSelect } from "@/components/capture/link-to-person-select";
 import { deleteCapturedSource } from "@/lib/actions/capture";
+import { getDict } from "@/lib/i18n/get-lang";
+import { formatDate } from "@/lib/format";
 
 export default async function CapturePage() {
+  const { t, lang } = await getDict();
   const [sources, persons] = await Promise.all([
     db.capturedSource.findMany({ orderBy: { createdAt: "desc" }, include: { person: true } }),
     db.person.findMany({ select: { id: true, name: true } }),
@@ -17,9 +20,9 @@ export default async function CapturePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">内容采集</h1>
+        <h1 className="text-2xl font-semibold">{t.cap_title}</h1>
         <p className="text-muted-foreground text-sm">
-          粘贴链接或文字稿，自动抓正文 + AI提炼要点，可以关联到知识图谱里的人物卡
+          {t.cap_subtitle}
         </p>
       </div>
 
@@ -42,7 +45,7 @@ export default async function CapturePage() {
                   )}
                   {s.person && <Badge variant="secondary">{s.person.name}</Badge>}
                   <span className="text-muted-foreground text-xs">
-                    {s.createdAt.toLocaleDateString("zh-CN")}
+                    {formatDate(s.createdAt, lang)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -63,7 +66,7 @@ export default async function CapturePage() {
           </Card>
         ))}
         {sources.length === 0 && (
-          <p className="text-muted-foreground text-sm">还没有采集任何内容</p>
+          <p className="text-muted-foreground text-sm">{t.cap_none_yet}</p>
         )}
       </div>
     </div>

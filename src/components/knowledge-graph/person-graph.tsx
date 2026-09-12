@@ -16,9 +16,11 @@ type Relation = { id: string; fromPersonId: string; toPersonId: string; note: st
 export function PersonGraph({
   persons,
   relations,
+  emptyLabel,
 }: {
   persons: PersonNode[];
   relations: Relation[];
+  emptyLabel: string;
 }) {
   const router = useRouter();
 
@@ -34,8 +36,9 @@ export function PersonGraph({
         },
         data: { label: p.name },
         style: {
-          background: p.category === "INVESTOR" ? "#e0f2fe" : "#fef3c7",
-          border: "1px solid #d1d5db",
+          background: p.category === "INVESTOR" ? "#bbd7e8" : "#e7b79c",
+          color: "#3a3733",
+          border: "1px solid #dcdcd2",
           borderRadius: 8,
           padding: 8,
           fontSize: 12,
@@ -59,7 +62,7 @@ export function PersonGraph({
   if (persons.length === 0) {
     return (
       <div className="text-muted-foreground flex h-[400px] items-center justify-center text-sm">
-        还没有人物卡，新建一个之后这里会出现关系图
+        {emptyLabel}
       </div>
     );
   }

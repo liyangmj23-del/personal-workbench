@@ -15,6 +15,7 @@ import {
 import { Trash2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { createPerson, updatePerson, deletePerson, extractPersonFromText } from "@/lib/actions/knowledge-graph";
+import { useLanguage } from "@/components/language-provider";
 
 type PersonData = {
   id: string;
@@ -27,6 +28,7 @@ type PersonData = {
 };
 
 export function PersonForm({ person }: { person?: PersonData }) {
+  const { t } = useLanguage();
   const [name, setName] = useState(person?.name ?? "");
   const [category, setCategory] = useState<"INVESTOR" | "INDUSTRY">(person?.category ?? "INVESTOR");
   const [coreViews, setCoreViews] = useState(person?.coreViews ?? "");
@@ -50,7 +52,7 @@ export function PersonForm({ person }: { person?: PersonData }) {
 
   async function handleExtract() {
     if (!name.trim() || !sourceText.trim()) {
-      toast.error("先填人物姓名，再贴一段原文");
+      toast.error(t.kg_extract_need_name_text);
       return;
     }
     setExtracting(true);
@@ -59,9 +61,9 @@ export function PersonForm({ person }: { person?: PersonData }) {
       setCoreViews((prev) => (prev ? prev + "\n\n" + result.coreViews : result.coreViews));
       setMethodology((prev) => (prev ? prev + "\n\n" + result.methodology : result.methodology));
       setCases((prev) => (prev ? prev + "\n\n" + result.cases : result.cases));
-      toast.success("AI 抽取完成，检查一下再保存");
+      toast.success(t.kg_extract_done);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "抽取失败");
+      toast.error(e instanceof Error ? e.message : t.kg_extract_failed);
     } finally {
       setExtracting(false);
     }
@@ -70,14 +72,14 @@ export function PersonForm({ person }: { person?: PersonData }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="人物姓名" className="max-w-sm text-lg font-semibold" />
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.kg_name_placeholder} className="max-w-sm text-lg font-semibold" />
         <Select value={category} onValueChange={(v) => setCategory((v ?? "INVESTOR") as "INVESTOR" | "INDUSTRY")}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="INVESTOR">投资大师</SelectItem>
-            <SelectItem value="INDUSTRY">行业人物</SelectItem>
+            <SelectItem value="INVESTOR">{t.kg_category_investor}</SelectItem>
+            <SelectItem value="INDUSTRY">{t.kg_category_industry}</SelectItem>
           </SelectContent>
         </Select>
         <Button
@@ -90,7 +92,7 @@ export function PersonForm({ person }: { person?: PersonData }) {
             })
           }
         >
-          {pending ? "保存中..." : "保存"}
+          {pending ? t.fin_saving : t.fin_save}
         </Button>
         {person && (
           <Button
@@ -105,34 +107,34 @@ export function PersonForm({ person }: { person?: PersonData }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="sourceUrl">原始资料链接（可选）</Label>
+        <Label htmlFor="sourceUrl">{t.kg_source_url}</Label>
         <Input id="sourceUrl" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://..." />
       </div>
 
       <div className="flex flex-col gap-2 rounded-md border p-3">
-        <Label>AI 辅助抽取：贴一段书籍摘录/文章原文，自动填充下面三块</Label>
+        <Label>{t.kg_ai_extract_label}</Label>
         <Textarea
           value={sourceText}
           onChange={(e) => setSourceText(e.target.value)}
-          placeholder="粘贴原文..."
+          placeholder={t.kg_ai_extract_placeholder}
           className="min-h-24"
         />
         <Button variant="outline" size="sm" onClick={handleExtract} disabled={extracting} className="self-start">
           <Sparkles className="size-4" />
-          {extracting ? "抽取中..." : "AI 抽取"}
+          {extracting ? t.kg_extracting : t.kg_ai_extract_button}
         </Button>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="coreViews">核心观点</Label>
+        <Label htmlFor="coreViews">{t.kg_core_views}</Label>
         <Textarea id="coreViews" value={coreViews} onChange={(e) => setCoreViews(e.target.value)} className="min-h-32 font-mono text-sm" />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="methodology">方法论</Label>
+        <Label htmlFor="methodology">{t.kg_methodology}</Label>
         <Textarea id="methodology" value={methodology} onChange={(e) => setMethodology(e.target.value)} className="min-h-32 font-mono text-sm" />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="cases">经典案例 / 经历</Label>
+        <Label htmlFor="cases">{t.kg_cases}</Label>
         <Textarea id="cases" value={cases} onChange={(e) => setCases(e.target.value)} className="min-h-32 font-mono text-sm" />
       </div>
     </div>

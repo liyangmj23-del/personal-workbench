@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { captureFromUrl, captureFromText } from "@/lib/actions/capture";
+import { useLanguage } from "@/components/language-provider";
 
 export function CaptureForm() {
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [pending, startTransition] = useTransition();
@@ -16,11 +18,11 @@ export function CaptureForm() {
   return (
     <Tabs defaultValue="url">
       <TabsList>
-        <TabsTrigger value="url">粘贴链接</TabsTrigger>
-        <TabsTrigger value="text">粘贴文本</TabsTrigger>
+        <TabsTrigger value="url">{t.cap_tab_url}</TabsTrigger>
+        <TabsTrigger value="text">{t.cap_tab_text}</TabsTrigger>
       </TabsList>
       <TabsContent value="url" className="flex flex-col gap-3">
-        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t.cap_url_placeholder} />
         <Button
           className="self-start"
           disabled={pending || !url.trim()}
@@ -29,21 +31,21 @@ export function CaptureForm() {
               try {
                 await captureFromUrl(url);
                 setUrl("");
-                toast.success("抓取并提炼完成");
+                toast.success(t.cap_fetch_success);
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "抓取失败");
+                toast.error(e instanceof Error ? e.message : t.cap_fetch_failed);
               }
             })
           }
         >
-          {pending ? "处理中..." : "抓取并提炼"}
+          {pending ? t.cap_processing : t.cap_fetch_button}
         </Button>
       </TabsContent>
       <TabsContent value="text" className="flex flex-col gap-3">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="粘贴一段访谈/播客文字稿..."
+          placeholder={t.cap_text_placeholder}
           className="min-h-32"
         />
         <Button
@@ -54,14 +56,14 @@ export function CaptureForm() {
               try {
                 await captureFromText(text);
                 setText("");
-                toast.success("提炼完成");
+                toast.success(t.cap_summarize_success);
               } catch (e) {
-                toast.error(e instanceof Error ? e.message : "处理失败");
+                toast.error(e instanceof Error ? e.message : t.cap_summarize_failed);
               }
             })
           }
         >
-          {pending ? "处理中..." : "提炼"}
+          {pending ? t.cap_processing : t.cap_summarize_button}
         </Button>
       </TabsContent>
     </Tabs>

@@ -8,10 +8,13 @@ import {
   NotebookText,
   Network,
   Inbox,
+  Settings,
+  Check,
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -20,29 +23,44 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-const NAV_ITEMS = [
-  { href: "/", label: "总览", icon: LayoutDashboard },
-  { href: "/finance", label: "记账 & 持仓", icon: Wallet },
-  { href: "/notes", label: "读书笔记", icon: NotebookText },
-  { href: "/knowledge-graph", label: "知识图谱", icon: Network },
-  { href: "/capture", label: "内容采集", icon: Inbox },
-];
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/components/language-provider";
+import type { Lang } from "@/lib/i18n/dictionary";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { t, lang, setLang } = useLanguage();
+
+  const NAV_ITEMS = [
+    { href: "/", label: t.nav_dashboard, icon: LayoutDashboard },
+    { href: "/finance", label: t.nav_finance, icon: Wallet },
+    { href: "/notes", label: t.nav_notes, icon: NotebookText },
+    { href: "/knowledge-graph", label: t.nav_knowledge_graph, icon: Network },
+    { href: "/capture", label: t.nav_capture, icon: Inbox },
+  ];
+
+  const LANG_OPTIONS: { value: Lang; label: string }[] = [
+    { value: "zh", label: t.lang_zh },
+    { value: "en", label: t.lang_en },
+  ];
 
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="px-2 py-1.5">
-          <div className="text-sm font-semibold">个人工作台</div>
-          <div className="text-xs text-muted-foreground">Personal Workbench</div>
+          <div className="text-sm font-semibold">{t.app_name}</div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>模块</SidebarGroupLabel>
+          <SidebarGroupLabel>{t.nav_group_modules}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV_ITEMS.map((item) => {
@@ -63,6 +81,28 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<SidebarMenuButton />}>
+                <Settings />
+                <span>{t.settings}</span>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-48">
+                <DropdownMenuLabel>{t.language}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {LANG_OPTIONS.map((opt) => (
+                  <DropdownMenuItem key={opt.value} onClick={() => setLang(opt.value)}>
+                    {opt.label}
+                    {lang === opt.value && <Check className="ml-auto size-4" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

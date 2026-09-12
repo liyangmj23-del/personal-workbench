@@ -4,8 +4,10 @@ import { useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateHoldingValue } from "@/lib/actions/finance";
+import { useLanguage } from "@/components/language-provider";
 
 export function UpdateHoldingValueForm({ holdingId, currentValue }: { holdingId: string; currentValue: number }) {
+  const { t } = useLanguage();
   const [value, setValue] = useState(String(currentValue));
   const [pending, startTransition] = useTransition();
 
@@ -24,7 +26,7 @@ export function UpdateHoldingValueForm({ holdingId, currentValue }: { holdingId:
         disabled={pending}
         onClick={() => startTransition(() => updateHoldingValue(holdingId, Number(value)))}
       >
-        更新
+        {t.fin_update}
       </Button>
     </div>
   );

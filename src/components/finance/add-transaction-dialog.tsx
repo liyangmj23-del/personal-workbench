@@ -21,10 +21,12 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { createTransaction } from "@/lib/actions/finance";
+import { useLanguage } from "@/components/language-provider";
 
 type Account = { id: string; name: string };
 
 export function AddTransactionDialog({ accounts }: { accounts: Account[] }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [direction, setDirection] = useState<"IN" | "OUT">("OUT");
@@ -35,11 +37,11 @@ export function AddTransactionDialog({ accounts }: { accounts: Account[] }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button size="sm" disabled={accounts.length === 0} />}>
         <Plus className="size-4" />
-        记一笔
+        {t.fin_add_transaction}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>记一笔</DialogTitle>
+          <DialogTitle>{t.fin_add_transaction}</DialogTitle>
         </DialogHeader>
         <form
           ref={formRef}
@@ -58,7 +60,7 @@ export function AddTransactionDialog({ accounts }: { accounts: Account[] }) {
           }}
         >
           <div className="flex flex-col gap-2">
-            <Label>账户</Label>
+            <Label>{t.fin_select_account}</Label>
             <Select value={accountId} onValueChange={(v) => setAccountId(v ?? "")}>
               <SelectTrigger>
                 <SelectValue />
@@ -74,37 +76,37 @@ export function AddTransactionDialog({ accounts }: { accounts: Account[] }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label>收/支</Label>
+              <Label>{t.fin_direction}</Label>
               <Select value={direction} onValueChange={(v) => setDirection((v ?? "OUT") as "IN" | "OUT")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OUT">支出</SelectItem>
-                  <SelectItem value="IN">收入</SelectItem>
+                  <SelectItem value="OUT">{t.fin_direction_out}</SelectItem>
+                  <SelectItem value="IN">{t.fin_direction_in}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">金额</Label>
+              <Label htmlFor="amount">{t.fin_amount}</Label>
               <Input id="amount" name="amount" type="number" step="0.01" min="0" required />
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="date">日期</Label>
+            <Label htmlFor="date">{t.fin_date}</Label>
             <Input id="date" name="date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="category">分类</Label>
-            <Input id="category" name="category" placeholder="比如：餐饮 / 工资 / 购物" required />
+            <Label htmlFor="category">{t.fin_category}</Label>
+            <Input id="category" name="category" placeholder={t.fin_category_placeholder} required />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="note">备注（可选）</Label>
+            <Label htmlFor="note">{t.fin_note_optional}</Label>
             <Input id="note" name="note" />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending || !accountId}>
-              {pending ? "保存中..." : "保存"}
+              {pending ? t.fin_saving : t.fin_save}
             </Button>
           </DialogFooter>
         </form>

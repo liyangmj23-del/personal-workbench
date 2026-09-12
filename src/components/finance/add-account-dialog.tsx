@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { createAccount } from "@/lib/actions/finance";
+import { useLanguage } from "@/components/language-provider";
 
 export function AddAccountDialog() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("CASH");
   const [pending, startTransition] = useTransition();
@@ -32,11 +34,11 @@ export function AddAccountDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button size="sm" variant="outline" />}>
         <Plus className="size-4" />
-        新建账户
+        {t.fin_new_account}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>新建账户</DialogTitle>
+          <DialogTitle>{t.fin_new_account}</DialogTitle>
         </DialogHeader>
         <form
           ref={formRef}
@@ -52,25 +54,25 @@ export function AddAccountDialog() {
           }}
         >
           <div className="flex flex-col gap-2">
-            <Label htmlFor="name">账户名</Label>
-            <Input id="name" name="name" placeholder="比如：支付宝 / 余额宝 / 股票账户" required />
+            <Label htmlFor="name">{t.fin_account_name}</Label>
+            <Input id="name" name="name" placeholder={t.fin_account_name_placeholder} required />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="type">类型</Label>
+            <Label htmlFor="type">{t.fin_account_type}</Label>
             <Select value={type} onValueChange={(v) => setType(v ?? "CASH")}>
               <SelectTrigger id="type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="CASH">现金类（记流水）</SelectItem>
-                <SelectItem value="INVESTMENT">投资类（记持仓）</SelectItem>
+                <SelectItem value="CASH">{t.fin_type_cash}</SelectItem>
+                <SelectItem value="INVESTMENT">{t.fin_type_invest}</SelectItem>
               </SelectContent>
             </Select>
             <input type="hidden" name="type" value={type} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending}>
-              {pending ? "保存中..." : "保存"}
+              {pending ? t.fin_saving : t.fin_save}
             </Button>
           </DialogFooter>
         </form>
