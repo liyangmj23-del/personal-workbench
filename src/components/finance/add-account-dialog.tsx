@@ -66,6 +66,7 @@ export function AddAccountDialog() {
               <SelectContent>
                 <SelectItem value="CASH">{t.fin_type_cash}</SelectItem>
                 <SelectItem value="INVESTMENT">{t.fin_type_invest}</SelectItem>
+                <SelectItem value="LIABILITY">{t.fin_type_liability}</SelectItem>
               </SelectContent>
             </Select>
             <input type="hidden" name="type" value={type} />

@@ -26,6 +26,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -90,14 +91,16 @@ export function AppSidebar() {
                 <span>{t.settings}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-48">
-                <DropdownMenuLabel>{t.language}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {LANG_OPTIONS.map((opt) => (
-                  <DropdownMenuItem key={opt.value} onClick={() => setLang(opt.value)}>
-                    {opt.label}
-                    {lang === opt.value && <Check className="ml-auto size-4" />}
-                  </DropdownMenuItem>
-                ))}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{t.language}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {LANG_OPTIONS.map((opt) => (
+                    <DropdownMenuItem key={opt.value} onClick={() => setLang(opt.value)}>
+                      {opt.label}
+                      {lang === opt.value && <Check className="ml-auto size-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

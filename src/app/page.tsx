@@ -17,9 +17,10 @@ function StatIcon({ className, children }: { className?: string; children: React
 
 export default async function DashboardPage() {
   const { t, lang } = await getDict();
-  const [cashAccounts, investAccounts, holdings, recentNotes, recentPersons] = await Promise.all([
+  const [cashAccounts, investAccounts, liabilityAccounts, holdings, recentNotes, recentPersons] = await Promise.all([
     db.account.findMany({ where: { type: "CASH" }, include: { transactions: true } }),
     db.account.findMany({ where: { type: "INVESTMENT" } }),
+    db.account.findMany({ where: { type: "LIABILITY" }, include: { transactions: true } }),
     db.holding.findMany(),
     db.note.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
     db.person.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
@@ -29,10 +30,14 @@ export default async function DashboardPage() {
     (sum, acc) => sum + acc.transactions.reduce((s, t) => s + t.amount, 0),
     0
   );
+  const liabilitiesTotal = Math.abs(
+    liabilityAccounts.reduce((sum, acc) => sum + acc.transactions.reduce((s, t) => s + t.amount, 0), 0)
+  );
   const holdingsCost = holdings.reduce((s, h) => s + h.costBasis, 0);
   const holdingsValue = holdings.reduce((s, h) => s + h.currentValue, 0);
   const pnl = holdingsValue - holdingsCost;
   const totalAssets = cashTotal + holdingsValue;
+  const netWorth = totalAssets - liabilitiesTotal;
   const isGain = pnl >= 0;
 
   return (
@@ -50,11 +55,11 @@ export default async function DashboardPage() {
             </StatIcon>
             <div>
               <CardDescription>{t.dash_total_assets}</CardDescription>
-              <CardTitle className="text-2xl">{formatCNY(totalAssets, lang)}</CardTitle>
+              <CardTitle className="text-2xl">{formatCNY(netWorth, lang)}</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            {formatDict(t.dash_cash_plus_holdings, { cash: formatCNY(cashTotal, lang), value: formatCNY(holdingsValue, lang) })}
+            {formatDict(t.dash_cash_plus_holdings, { assets: formatCNY(totalAssets, lang), liabilities: formatCNY(liabilitiesTotal, lang) })}
           </CardContent>
         </Card>
         <Card>

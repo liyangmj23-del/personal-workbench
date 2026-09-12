@@ -58,6 +58,7 @@ model PersonRelation {
 enum AccountType {
   CASH // 现金/储蓄/余额宝一类
   INVESTMENT // 基金/股票账户
+  LIABILITY // 花呗/月付一类负债账户
 }
 
 model Account {
