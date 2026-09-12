@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Wallet, LineChart } from "lucide-react";
+import { Trash2, Wallet, LineChart, CreditCard } from "lucide-react";
 import { AddAccountDialog } from "@/components/finance/add-account-dialog";
 import { AddTransactionDialog } from "@/components/finance/add-transaction-dialog";
 import { AddHoldingDialog } from "@/components/finance/add-holding-dialog";
@@ -25,17 +25,24 @@ import { UpdateHoldingValueForm } from "@/components/finance/update-holding-valu
 import { deleteAccount, deleteTransaction, deleteHolding } from "@/lib/actions/finance";
 import { getDict } from "@/lib/i18n/get-lang";
 import { formatCNY } from "@/lib/format";
+import { getCashStats, getMonthlyTrend, resolveDateRange } from "@/lib/finance-stats";
+import { StatsPanel } from "@/components/finance/stats-panel";
+import { categoryLabel } from "@/lib/categories";
 
 export default async function FinancePage() {
   const { t, lang } = await getDict();
-  const [accounts, transactions, holdings] = await Promise.all([
+  const now = new Date();
+  const thisMonth = resolveDateRange("this_month", now);
+  const [accounts, transactions, holdings, initialStats, monthlyTrend] = await Promise.all([
     db.account.findMany({ include: { transactions: true }, orderBy: { createdAt: "asc" } }),
     db.transaction.findMany({ include: { account: true }, orderBy: { date: "desc" }, take: 50 }),
     db.holding.findMany({ include: { account: true }, orderBy: { createdAt: "asc" } }),
+    getCashStats(thisMonth.from, thisMonth.to),
+    getMonthlyTrend(now, 6),
   ]);
 
-  const cashAccounts = accounts.filter((a) => a.type === "CASH");
   const investAccounts = accounts.filter((a) => a.type === "INVESTMENT");
+  const transactableAccounts = accounts.filter((a) => a.type !== "INVESTMENT");
 
   return (
     <div className="flex flex-col gap-6">
@@ -54,11 +61,25 @@ export default async function FinancePage() {
             <Card key={acc.id}>
               <CardHeader className="flex flex-row items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`flex size-9 items-center justify-center rounded-full ${acc.type === "CASH" ? "bg-pastel-lemon" : "bg-pastel-ice"} text-foreground`}>
-                    {acc.type === "CASH" ? <Wallet className="size-4" /> : <LineChart className="size-4" />}
+                  <div
+                    className={`flex size-9 items-center justify-center rounded-full text-foreground ${
+                      acc.type === "CASH"
+                        ? "bg-pastel-lemon"
+                        : acc.type === "LIABILITY"
+                          ? "bg-pastel-rose"
+                          : "bg-pastel-ice"
+                    }`}
+                  >
+                    {acc.type === "CASH" && <Wallet className="size-4" />}
+                    {acc.type === "INVESTMENT" && <LineChart className="size-4" />}
+                    {acc.type === "LIABILITY" && <CreditCard className="size-4" />}
                   </div>
                   <div>
-                    <CardDescription>{acc.type === "CASH" ? t.fin_cash_account : t.fin_invest_account}</CardDescription>
+                    <CardDescription>
+                      {acc.type === "CASH" && t.fin_cash_account}
+                      {acc.type === "INVESTMENT" && t.fin_invest_account}
+                      {acc.type === "LIABILITY" && t.fin_liability_account}
+                    </CardDescription>
                     <CardTitle>{acc.name}</CardTitle>
                   </div>
                 </div>
@@ -68,8 +89,10 @@ export default async function FinancePage() {
                   </Button>
                 </form>
               </CardHeader>
-              {acc.type === "CASH" && (
-                <CardContent className="text-xl font-semibold">{formatCNY(balance, lang)}</CardContent>
+              {acc.type !== "INVESTMENT" && (
+                <CardContent className={`text-xl font-semibold ${acc.type === "LIABILITY" ? "text-status-bad" : ""}`}>
+                  {formatCNY(balance, lang)}
+                </CardContent>
               )}
             </Card>
           );
@@ -83,11 +106,15 @@ export default async function FinancePage() {
         <TabsList>
           <TabsTrigger value="transactions">{t.fin_tab_transactions}</TabsTrigger>
           <TabsTrigger value="holdings">{t.fin_tab_holdings}</TabsTrigger>
+          <TabsTrigger value="stats">{t.fin_tab_stats}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions" className="flex flex-col gap-4">
-          <div className="flex justify-end">
-            <AddTransactionDialog accounts={cashAccounts.map((a) => ({ id: a.id, name: a.name }))} />
+          <div className="flex items-center justify-end gap-2">
+            <Button size="sm" variant="outline" nativeButton={false} render={<a href="/finance/export?range=all" />}>
+              {t.fin_export_csv}
+            </Button>
+            <AddTransactionDialog accounts={transactableAccounts.map((a) => ({ id: a.id, name: a.name }))} />
           </div>
           <Card>
             <CardContent>
@@ -107,7 +134,7 @@ export default async function FinancePage() {
                     <TableRow key={tx.id}>
                       <TableCell>{tx.date.toISOString().slice(0, 10)}</TableCell>
                       <TableCell>{tx.account.name}</TableCell>
-                      <TableCell>{tx.category}</TableCell>
+                      <TableCell>{categoryLabel(tx.category, lang)}</TableCell>
                       <TableCell className="text-muted-foreground">{tx.note}</TableCell>
                       <TableCell className={`text-right ${tx.amount >= 0 ? "text-status-good" : "text-status-bad"}`}>
                         {tx.amount >= 0 ? "+" : ""}
@@ -196,6 +223,14 @@ export default async function FinancePage() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <StatsPanel
+            initialStats={initialStats}
+            monthlyTrend={monthlyTrend}
+            hasCashFlowAccounts={transactableAccounts.length > 0}
+          />
         </TabsContent>
       </Tabs>
     </div>
