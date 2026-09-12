@@ -1,0 +1,114 @@
+// Prisma schema — 个人工作台数据模型
+// 学习更多： https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- 读书笔记 ----------
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String // markdown
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------- 知识图谱：人物卡（投资大师 / 行业人物 共用） ----------
+enum PersonCategory {
+  INVESTOR // 投资大师（炒股知识图谱）
+  INDUSTRY // 行业人物（CEO/高管/产品负责人）
+}
+
+model Person {
+  id          String         @id @default(cuid())
+  name        String
+  category    PersonCategory
+  coreViews   String? // 核心观点 (markdown)
+  methodology String? // 方法论 (markdown)
+  cases       String? // 经典案例/经历 (markdown)
+  sourceUrl   String? // 原始资料链接
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  relationsFrom   PersonRelation[] @relation("RelationFrom")
+  relationsTo     PersonRelation[] @relation("RelationTo")
+  capturedSources CapturedSource[]
+}
+
+model PersonRelation {
+  id           String @id @default(cuid())
+  fromPersonId String
+  toPersonId   String
+  note         String? // 关联说明，比如"安全边际概念来源"
+
+  fromPerson Person @relation("RelationFrom", fields: [fromPersonId], references: [id], onDelete: Cascade)
+  toPerson   Person @relation("RelationTo", fields: [toPersonId], references: [id], onDelete: Cascade)
+
+  @@unique([fromPersonId, toPersonId])
+}
+
+// ---------- 记账 ----------
+enum AccountType {
+  CASH // 现金/储蓄/余额宝一类
+  INVESTMENT // 基金/股票账户
+}
+
+model Account {
+  id       String      @id @default(cuid())
+  name     String
+  type     AccountType
+  currency String      @default("CNY")
+
+  transactions Transaction[]
+  holdings     Holding[]
+
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  accountId String
+  date      DateTime
+  amount    Float // 收入为正，支出为负
+  category  String
+  note      String?
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ---------- 持仓（基金/股票） ----------
+model Holding {
+  id           String   @id @default(cuid())
+  accountId    String
+  name         String
+  code         String? // 基金代码/股票代码
+  shares       Float
+  costBasis    Float // 总成本
+  currentValue Float // 当前市值（手动更新）
+  updatedAt    DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ---------- 行业人物言论采集 ----------
+model CapturedSource {
+  id        String   @id @default(cuid())
+  url       String?
+  rawText   String
+  summary   String?
+  personId  String?
+  createdAt DateTime @default(now())
+
+  person Person? @relation(fields: [personId], references: [id], onDelete: SetNull)
+}
